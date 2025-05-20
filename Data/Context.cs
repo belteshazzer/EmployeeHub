@@ -1,0 +1,35 @@
+using Microsoft.EntityFrameworkCore;
+using EmployeeHub.Models.Entities;
+
+namespace EmployeeHub.Data
+{
+    public class EmployeeHubContext : DbContext
+    {
+        public EmployeeHubContext(DbContextOptions<EmployeeHubContext> options)
+            : base(options)
+        {
+        }
+
+        public DbSet<Chat> Chats { get; set; }
+        public DbSet<User> Users { get; set; }
+
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            base.OnModelCreating(modelBuilder);
+
+            // Configure entity relationships and constraints here if needed
+            // Example:
+            modelBuilder.Entity<Chat>()
+                .HasOne(c => c.User1)
+                .WithMany(u => u.Chat)
+                .HasForeignKey(c => c.User1Id)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<Chat>()
+                .HasOne(c => c.User2)
+                .WithMany(u => u.Chat)
+                .HasForeignKey(c => c.User2Id)
+                .OnDelete(DeleteBehavior.Restrict);
+        }
+    }
+}
