@@ -1,6 +1,9 @@
+using EmployeeHub.Common.EmailSender;
 using EmployeeHub.Data;
+using EmployeeHub.Hubs;
 using EmployeeHub.Models.Entities;
 using EmployeeHub.Repository;
+using EmployeeHub.Services.AuthServices;
 using EmployeeHub.Services.ChatServices;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -16,8 +19,10 @@ builder.Services.AddDbContext<EmployeeHubContext>(options =>
 
 builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
 builder.Services.AddScoped<IChatService, ChatService>();
+builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<IEmailSender, EmailSender>();
 
-builder.Services.AddIdentity<User, IdentityRole>(options =>
+builder.Services.AddIdentity<User, IdentityRole<Guid>>(options =>
 {
     options.User.RequireUniqueEmail = true;
     
@@ -29,6 +34,9 @@ builder.Services.AddIdentity<User, IdentityRole>(options =>
     options.Password.RequireNonAlphanumeric = false;
 }).AddEntityFrameworkStores<EmployeeHubContext>()
   .AddDefaultTokenProviders();
+
+builder.Services.AddSignalR();
+builder.Services.AddAutoMapper(typeof(Program).Assembly);
 
 var app = builder.Build();
 
@@ -45,8 +53,12 @@ app.UseStaticFiles();
 
 app.UseRouting();
 
+app.UseAuthentication(); 
 app.UseAuthorization();
 
+app.MapHub<ChatHub>("/chatHub");
 app.MapRazorPages();
 
 app.Run();
+
+

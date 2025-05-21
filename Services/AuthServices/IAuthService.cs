@@ -1,13 +1,18 @@
 using EmployeeHub.Models.Dtos;
+using EmployeeHub.Models.Entities;
 
 namespace EmployeeHub.Services.AuthServices
 {
     public interface IAuthService
     {
-        Task<LoginResponse> RegisterAsync(string username, string password);
-        Task<LoginResponse> LoginAsync(string username, string password);
-        Task<bool> LogoutAsync(string token);
-        Task<bool> ResetPasswordAsync(string username, string newPassword);
-        Task<bool> ChangePasswordAsync(string username, string oldPassword, string newPassword);
+        Task<User> RegisterUserAsync(User user, string password);
+        Task<bool> VerifyEmailAsync(string email, string token);
+        Task<LoginResponse> LoginUserAsync(string email, string password);
+        Task<bool> ResendVerificationEmailAsync(string email);
+        Task<bool> ResetPasswordAsync(string email, string token, string newPassword);
+        Task<bool> SendPasswordResetEmailAsync(string email);
+        Task LogoutUserAsync();
+        Task<bool> DeleteUserAsync(string email);
+        Task<bool> ChangePasswordAsync(string email, string oldPassword, string newPassword);
     }
 }

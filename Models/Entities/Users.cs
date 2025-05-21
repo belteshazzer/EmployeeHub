@@ -2,10 +2,8 @@ using Microsoft.AspNetCore.Identity;
 
 namespace EmployeeHub.Models.Entities
 {
-    public partial class User : IdentityUser
+    public partial class User : IdentityUser<Guid>
     {
-        public override string Id { get; set; } = Guid.NewGuid().ToString();
-
         public string FirstName { get; set; } = null!;
 
         public string LastName { get; set; } = null!;
@@ -13,7 +11,8 @@ namespace EmployeeHub.Models.Entities
         public string? ProfilePicture { get; set; }
 
         public byte ApprovalStatus { get; set; } = 0;
-
+        public string RefreshToken { get; set; } = null!;
+        public DateTime? RefreshTokenExpiryTime { get; set; }
         public Guid? DeletedBy { get; set; }
 
         public DateTime CreatedDate { get; set; }

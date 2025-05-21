@@ -15,5 +15,6 @@ namespace RLIMS.Services.ChatService
         Task DeleteChatAsync(Guid chatId);
         Task DeleteMessageAsync(Guid chatId, Guid messageId);
         Task<Chat> UpdateMessageAsync(Guid chatId, Guid messageId, string updatedMessage);
+        Task MarkMessageAsRead(Guid chatId, Guid messageId, Guid userId);
     }
 }

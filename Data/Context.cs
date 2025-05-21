@@ -1,9 +1,11 @@
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using EmployeeHub.Models.Entities;
+using Microsoft.AspNetCore.Identity;
 
 namespace EmployeeHub.Data
 {
-    public class EmployeeHubContext : DbContext
+    public class EmployeeHubContext : IdentityDbContext<User, IdentityRole<Guid>, Guid>
     {
         public EmployeeHubContext(DbContextOptions<EmployeeHubContext> options)
             : base(options)
@@ -11,14 +13,12 @@ namespace EmployeeHub.Data
         }
 
         public DbSet<Chat> Chats { get; set; }
-        public DbSet<User> Users { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
 
             // Configure entity relationships and constraints here if needed
-            // Example:
             modelBuilder.Entity<Chat>()
                 .HasOne(c => c.User1)
                 .WithMany(u => u.Chat)

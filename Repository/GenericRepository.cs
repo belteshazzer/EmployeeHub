@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace EmployeeHub.Repository
 {
-    public class GenericRepository<TEntity> where TEntity : class
+    public class GenericRepository<TEntity> : IGenericRepository<TEntity> where TEntity : class
     {
         private readonly EmployeeHubContext _context;
         private readonly DbSet<TEntity> _dbSet;
@@ -51,6 +51,5 @@ namespace EmployeeHub.Repository
                 await _context.SaveChangesAsync();
             }
         }
-
     }
 }
