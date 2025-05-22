@@ -56,15 +56,13 @@ namespace EmployeeHub.Services.ChatServices
                 { 
                     User1Id = senderUserId,
                     User2Id = chatHistoryDto.ReceiverUserId,
-                    MessagesJson = JsonConvert.SerializeObject(new[] { chatHistory })
+                    MessagesJson = [chatHistory]
                 };
                 await _repository.AddAsync(chat);
             }
             else
             {
-                var messages = JsonConvert.DeserializeObject<List<ChatHistory>>(chat.MessagesJson) ?? new List<ChatHistory>();
-                messages.Add(chatHistory);
-                chat.MessagesJson = JsonConvert.SerializeObject(messages);
+                chat.MessagesJson.Add(chatHistory);
                 await _repository.UpdateAsync(chat);
             }
 
@@ -87,13 +85,26 @@ namespace EmployeeHub.Services.ChatServices
                 return new List<ChatHistory>();
             }
 
-            var messages = JsonConvert.DeserializeObject<IEnumerable<ChatHistory>>(chat.First().MessagesJson);
-            return messages ?? new List<ChatHistory>();
+            var messages = chat.First().MessagesJson;
+            return messages ?? [];
+        }
+
+        public async Task<IEnumerable<ChatHistory>> GetChatHistoryAsync(Guid id)
+        {
+            var chat = await _repository.FindByConditionAsync(cm => cm.Id == id);
+
+            if (chat == null || !chat.Any())
+            {
+                return [];
+            }
+
+            var messages = chat.First().MessagesJson;
+            return messages ?? [];
         }
 
         public async Task<IEnumerable<Chat>> GetChatListAsync(Guid userId)
         {
-            var chats = await _repository.FindByConditionAsync(cm => 
+            var chats = await _repository.FindByConditionAsync(cm =>
                 (cm.User1Id == userId || cm.User2Id == userId) && !cm.IsDeleted);
             return chats;
         }
@@ -117,12 +128,11 @@ namespace EmployeeHub.Services.ChatServices
             var chat = (await _repository.FindByConditionAsync(cm => cm.Id == chatId)).FirstOrDefault();
             if (chat == null) return;
 
-            var messages = JsonConvert.DeserializeObject<List<ChatHistory>>(chat.MessagesJson) ?? new List<ChatHistory>();
+            var messages = chat.MessagesJson ?? [];
             var message = messages.FirstOrDefault(m => m.Id == messageId);
             if (message == null) return;
 
             message.IsDeleted = true;
-            chat.MessagesJson = JsonConvert.SerializeObject(messages);
             await _repository.UpdateAsync(chat);
 
             // Notify users about message deletion
@@ -136,14 +146,14 @@ namespace EmployeeHub.Services.ChatServices
             var chat = (await _repository.FindByConditionAsync(cm => cm.Id == chatId)).FirstOrDefault();
             if (chat == null) return null;
 
-            var messages = JsonConvert.DeserializeObject<List<ChatHistory>>(chat.MessagesJson) ?? new List<ChatHistory>();
+            var messages = chat.MessagesJson ?? [];
             var message = messages.FirstOrDefault(m => m.Id == messageId);
             if (message == null) return null;
 
             // Save message history
             var messageHistory = string.IsNullOrWhiteSpace(message.History)
                 ? new List<ChatHistory>()
-                : JsonConvert.DeserializeObject<List<ChatHistory>>(message.History) ?? new List<ChatHistory>();
+                : JsonConvert.DeserializeObject<List<ChatHistory>>(message.History) ?? [];
             
             var messageCopy = JsonConvert.DeserializeObject<ChatHistory>(JsonConvert.SerializeObject(message));
             messageHistory.Add(messageCopy);
@@ -154,7 +164,6 @@ namespace EmployeeHub.Services.ChatServices
             message.EditedTimestamp = DateTime.UtcNow;
             message.Message = updatedMessage;
 
-            chat.MessagesJson = JsonConvert.SerializeObject(messages);
             await _repository.UpdateAsync(chat);
 
             // Notify users about message update
@@ -170,7 +179,7 @@ namespace EmployeeHub.Services.ChatServices
             var chat = (await _repository.FindByConditionAsync(cm => cm.Id == chatId)).FirstOrDefault();
             if (chat == null) return;
 
-            var messages = JsonConvert.DeserializeObject<List<ChatHistory>>(chat.MessagesJson) ?? new List<ChatHistory>();
+            var messages = chat.MessagesJson ?? [];
             var message = messages.FirstOrDefault(m => m.Id == messageId);
             if (message == null) return;
 

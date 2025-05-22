@@ -12,6 +12,7 @@ namespace RLIMS.Services.ChatService
         Task<ChatHistory> SendMessageToUser(ChatHistoryDto chatHistoryDto);
         Task<IEnumerable<ChatHistory>> GetChatHistoryAsync(Guid senderUserId, Guid receiverUserId);
         Task<IEnumerable<Chat>> GetChatListAsync(Guid userId);
+        Task<IEnumerable<ChatHistory>> GetChatHistoryAsync(Guid id);
         Task DeleteChatAsync(Guid chatId);
         Task DeleteMessageAsync(Guid chatId, Guid messageId);
         Task<Chat> UpdateMessageAsync(Guid chatId, Guid messageId, string updatedMessage);

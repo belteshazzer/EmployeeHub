@@ -21,6 +21,8 @@ namespace EmployeeHub.Models.Entities
 
         public bool? IsDeleted { get; set; }
 
-        public virtual ICollection<Chat> Chat { get; set; } = new List<Chat>();
+        public virtual ICollection<Chat> ChatsAsUser1 { get; set; } = [];
+        public virtual ICollection<Chat> ChatsAsUser2 { get; set; } = [];
+
     }
 }

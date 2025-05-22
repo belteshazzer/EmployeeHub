@@ -33,14 +33,14 @@ namespace EmployeeHub.Controllers
 
             if (results == null)
             {
-                return BadRequest(new ApiResponse
+                return BadRequest(new ApiResponse<object>
                 {
                     StatusCode = 400,
                     Data = null,
                     Message = "Registration failed. Please try again."
                 });
             }
-            return Ok(new ApiResponse
+            return Ok(new ApiResponse<object>
             {
                 StatusCode = 200 ,
                 Data = results,
@@ -54,7 +54,7 @@ namespace EmployeeHub.Controllers
         {
             if (string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(token))
             {
-                return BadRequest(new ApiResponse
+                return BadRequest(new ApiResponse<object>
                 {
                     StatusCode = 400,
                     Data = null,
@@ -64,7 +64,7 @@ namespace EmployeeHub.Controllers
 
             var result = await _authServices.VerifyEmailAsync(email, token);
 
-            return Ok(new ApiResponse
+            return Ok(new ApiResponse<object>
             {
                 StatusCode = result ? 200 : 400,
                 Data = null,
@@ -77,7 +77,7 @@ namespace EmployeeHub.Controllers
         {
             if (request == null || string.IsNullOrWhiteSpace(request.Email) || string.IsNullOrWhiteSpace(request.Password))
             {
-                return BadRequest(new ApiResponse
+                return BadRequest(new ApiResponse<object>
                 {
                     StatusCode = 400,
                     Data = null,
@@ -86,7 +86,7 @@ namespace EmployeeHub.Controllers
             }
 
             var result = await _authServices.LoginUserAsync(request.Email, request.Password);
-            return Ok(new ApiResponse
+            return Ok(new ApiResponse<object>
             {
                 StatusCode = 200,
                 Data = result,
@@ -99,7 +99,7 @@ namespace EmployeeHub.Controllers
         {
            
             await _authServices.LogoutUserAsync();
-            return Ok(new ApiResponse
+            return Ok(new ApiResponse<object>
             {
                 StatusCode = 200,
                 Data = null,
@@ -113,7 +113,7 @@ namespace EmployeeHub.Controllers
 
             var result = await _authServices.ResendVerificationEmailAsync(request.Email);
             _logger.LogInformation("Resending verification email to: {Email}", request.Email);
-            return Ok(new ApiResponse
+            return Ok(new ApiResponse<object>
             {
                 StatusCode = result ? 200 : 400,
                 Data = null,
@@ -126,7 +126,7 @@ namespace EmployeeHub.Controllers
         {
           
             var result = await _authServices.ResetPasswordAsync(request.Email, request.Token, request.NewPassword);
-            return Ok(new ApiResponse
+            return Ok(new ApiResponse<object>
             {
                 StatusCode = result ? 200 : 400,
                 Data = null,
@@ -139,7 +139,7 @@ namespace EmployeeHub.Controllers
         {
            
             var result = await _authServices.SendPasswordResetEmailAsync(request.Email);
-            return Ok(new ApiResponse
+            return Ok(new ApiResponse<object>
             {
                 StatusCode = result? 200 : 400,
                 Data = null,
@@ -152,7 +152,7 @@ namespace EmployeeHub.Controllers
         public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordRequest request)
         {
            var result = await _authServices.ChangePasswordAsync(request.Email, request.OldPassword, request.NewPassword);
-            return Ok(new ApiResponse
+            return Ok(new ApiResponse<object>
             {
                 StatusCode = result ? 200 : 400,
                 Data = null,
@@ -164,7 +164,7 @@ namespace EmployeeHub.Controllers
         public async Task<IActionResult> DeleteAccount([FromBody] string email)
         {
             var result = await _authServices.DeleteUserAsync(email);
-            return Ok(new ApiResponse
+            return Ok(new ApiResponse<object>
             {
                 StatusCode = result ? 200 : 400,
                 Data = null,

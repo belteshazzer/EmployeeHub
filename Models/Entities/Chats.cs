@@ -1,3 +1,5 @@
+using EmployeeHub.Models.Dtos;
+
 namespace EmployeeHub.Models.Entities;
 
 public class Chat
@@ -8,7 +10,7 @@ public class Chat
 
     public Guid User2Id { get; set; }
 
-    public string? MessagesJson { get; set; } 
+    public List<ChatHistory>? MessagesJson { get; set; } 
 
     public Guid CreatedBy { get; set; }
 

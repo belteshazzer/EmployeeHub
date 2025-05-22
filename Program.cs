@@ -37,6 +37,10 @@ builder.Services.AddIdentity<User, IdentityRole<Guid>>(options =>
 
 builder.Services.AddSignalR();
 builder.Services.AddAutoMapper(typeof(Program).Assembly);
+builder.Services.AddHttpClient("DefaultClient", client =>
+{
+    client.Timeout = TimeSpan.FromMinutes(5); // Increase timeout to 5 minutes
+});
 
 var app = builder.Build();
 
@@ -56,8 +60,10 @@ app.UseRouting();
 app.UseAuthentication(); 
 app.UseAuthorization();
 
-app.MapHub<ChatHub>("/chatHub");
+app.MapHub<ChatHub>("/chat-hub");
 app.MapRazorPages();
+app.MapControllers();
+// app.MapFallbackToPage("/Chat/index");
 
 app.Run();
 

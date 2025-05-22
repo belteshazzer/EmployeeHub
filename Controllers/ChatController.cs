@@ -27,7 +27,7 @@ namespace EmployeeHub.Controllers
 
             var result = await _chatService.SendMessageToUser(chatHistoryDto);
 
-            return Ok(new ApiResponse
+            return Ok(new ApiResponse<object>
             {
                 StatusCode = 200,
                 Data = result,
@@ -35,14 +35,14 @@ namespace EmployeeHub.Controllers
             });
         }
 
-        [HttpGet("chat-history")]
+        [HttpGet("chat-history/{senderUserId}/{receiverUserId}")]
         public async Task<IActionResult> GetChatHistory(Guid senderUserId, Guid receiverUserId)
         {
             _logger.LogInformation("Fetching chat history between user {SenderId} and user {ReceiverId}", senderUserId, receiverUserId);
 
             var result = await _chatService.GetChatHistoryAsync(senderUserId, receiverUserId);
 
-            return Ok(new ApiResponse
+            return Ok(new ApiResponse<object>
             {
                 StatusCode = 200,
                 Data = result,
@@ -50,14 +50,28 @@ namespace EmployeeHub.Controllers
             });
         }
 
-        [HttpGet("chat-list")]
+        [HttpGet("chat-history/{id}")]
+        public async Task<IActionResult> GetChatHistory(Guid id)
+        {
+
+            var result = await _chatService.GetChatHistoryAsync(id);
+
+            return Ok(new ApiResponse<object>
+            {
+                StatusCode = 200,
+                Data = result,
+                Message = "Chat history retrieved successfully"
+            });
+        }
+
+        [HttpGet("chat-list/{userId}")]
         public async Task<IActionResult> GetChatList(Guid userId)
         {
             _logger.LogInformation("Fetching chat list for user {UserId}", userId);
 
             var result = await _chatService.GetChatListAsync(userId);
 
-            return Ok(new ApiResponse
+            return Ok(new ApiResponse<object>
             {
                 StatusCode = 200,
                 Data = result,
@@ -72,7 +86,7 @@ namespace EmployeeHub.Controllers
 
             await _chatService.DeleteChatAsync(chatId);
 
-            return Ok(new ApiResponse
+            return Ok(new ApiResponse<object>
             {
                 StatusCode = 200,
                 Data = null,
@@ -87,7 +101,7 @@ namespace EmployeeHub.Controllers
 
             await _chatService.DeleteMessageAsync(chatId, messageId);
 
-            return Ok(new ApiResponse
+            return Ok(new ApiResponse<object>
             {
                 StatusCode = 200,
                 Data = null,
@@ -102,7 +116,7 @@ namespace EmployeeHub.Controllers
 
             var result = await _chatService.UpdateMessageAsync(chatId, messageId, updatedMessage);
 
-            return Ok(new ApiResponse
+            return Ok(new ApiResponse<object>
             {
                 StatusCode = 200,
                 Data = result,
@@ -117,7 +131,7 @@ namespace EmployeeHub.Controllers
 
             await _chatService.MarkMessageAsRead(chatId, messageId, userId);
 
-            return Ok(new ApiResponse
+            return Ok(new ApiResponse<object>
             {
                 StatusCode = 200,
                 Data = null,

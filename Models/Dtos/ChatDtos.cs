@@ -5,7 +5,7 @@ namespace EmployeeHub.Models.Dtos
     {
         public Guid User1Id { get; set; }
         public Guid User2Id { get; set; }
-        public string MessagesJson { get; set; }
+        public List<ChatHistory>? MessagesJson { get; set; }
     }
 
     public class ChatHistoryDto

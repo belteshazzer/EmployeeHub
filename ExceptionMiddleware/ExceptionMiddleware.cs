@@ -45,7 +45,7 @@ namespace TheBookClub.Middleware.ExceptionMiddleware
 
             context.Response.StatusCode = statusCode;
 
-            var response = new ApiResponse
+            var response = new ApiResponse<object>
             {
                 StatusCode = statusCode,
                 Message = message,
