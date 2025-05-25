@@ -14,11 +14,11 @@
                 <i class="fas fa-plus"></i> New
             </button>
         </div>
-        
+
         <div class="search-box">
             <input type="text" placeholder="Search conversations..." class="form-control">
         </div>
-        
+
         <div class="conversation-list" id="conversationList">
             @if (Model.ChatList != null && Model.ChatList.Any())
             {
@@ -29,7 +29,7 @@
 
                     <div class="conversation-item" data-chat-id="@chat.Id" onclick="loadChatHistory('@chat.Id')">
                         <div class="conversation-avatar">
-                            <img src="~/images/default-avatar.png" alt="User Avatar" />
+                            <img src="~/images/default-avatar.png" alt="     " />
                         </div>
                         <div class="conversation-details">
                             <h5>@(chat.User2Id)</h5>
@@ -49,23 +49,21 @@
     <div class="chat-main">
         <div class="chat-header">
             <div id="currentChatInfo">
+                <input type="hidden" id="currentChatId" value="" />
                 <h4>Select a conversation</h4>
             </div>
         </div>
-        
+
         <div class="chat-messages" id="messageContainer">
             <!-- Chat history will be dynamically loaded here -->
         </div>
-        
+
         <div class="chat-input" id="chatInput" style="display: none;">
             <div class="input-group">
                 <input type="text" id="messageInput" class="form-control" placeholder="Type your message...">
                 <div class="input-group-append">
-                    <button class="btn btn-primary" id="sendButton">
+                    <button class="btn btn-primary" id="sendButton" onclick="sendMessage()">
                         <i class="fas fa-paper-plane"></i>
-                    </button>
-                    <button class="btn btn-light" id="attachButton">
-                        <i class="fas fa-paperclip"></i>
                     </button>
                 </div>
             </div>
@@ -75,7 +73,51 @@
 
 @section Scripts {
     <script>
+        async function sendMessage() {
+            const messageInput = document.getElementById('messageInput');
+            const message = messageInput.value.trim();
+            const currentChatId = document.getElementById('currentChatId').value; // Retrieve the chat ID
+
+            if (!message || !currentChatId) {
+                console.error("Message or chat ID is missing.");
+                return;
+            }
+
+            const payload = {
+                ReceiverUserId: Guid.parse("491A1237-78A0-44E1-B31F-250718611219"), 
+                Message: message
+            };
+
+            try {
+                const response = await fetch('/api/chat/send-message', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(payload)
+                });
+
+                if (response.ok) {
+                    const result = await response.json();
+                    console.log("Message sent successfully:", result);
+
+                    // Clear the input field
+                    messageInput.value = '';
+
+                    // Reload the chat history to include the new message
+                    loadChatHistory(currentChatId);
+                } else {
+                    console.error("Failed to send message.");
+                }
+            } catch (error) {
+                console.error("Error sending message:", error);
+            }
+        }
+
         async function loadChatHistory(chatId) {
+            currentChatId = chatId; // Set the current chat ID
+            document.getElementById('currentChatId').value = chatId; // Store it in the hidden input field
+
             try {
                 const response = await fetch(`/ChatHub/index?handler=ChatHistory&chatId=${chatId}`);
                 if (response.ok) {
