@@ -1,0 +1,64 @@
+@page
+@model EmployeeHub.Pages.AuthPages.LoginModel
+@{
+    ViewData["Title"] = "Login";
+}
+
+<div class="login-container">
+    <h2>Login</h2>
+    <form method="post" id="loginForm">
+        <div class="form-group">
+            <label for="email">Email</label>
+            <input type="email" id="email" name="Email" class="form-control" placeholder="Enter your email" required />
+        </div>
+        <div class="form-group">
+            <label for="password">Password</label>
+            <input type="password" id="password" name="Password" class="form-control" placeholder="Enter your password" required />
+        </div>
+        <button type="submit" class="btn btn-primary">Login</button>
+    </form>
+    <div id="errorMessage" class="text-danger mt-2" style="display: none;"></div>
+
+    <div class="signup-option mt-3">
+        <p>Don't have an account? <a href="/AuthPages/Signup" class="text-primary">Sign Up</a></p>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.getElementById('loginForm').addEventListener('submit', async function (event) {
+            event.preventDefault();
+
+            const email = document.getElementById('email').value.trim();
+            const password = document.getElementById('password').value.trim();
+
+            const payload = { Email: email, Password: password };
+
+            try {
+                const response = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(payload)
+                });
+
+                if (response.ok) {
+                    const result = await response.json();
+                    console.log("Login successful:", result);
+
+                    // Redirect to the chat page
+                    window.location.href = "/ChatHub/index";
+                } else {
+                    const error = await response.json();
+                    document.getElementById('errorMessage').innerText = error.message || "Login failed. Please try again.";
+                    document.getElementById('errorMessage').style.display = "block";
+                }
+            } catch (error) {
+                console.error("Error during login:", error);
+                document.getElementById('errorMessage').innerText = "An error occurred. Please try again.";
+                document.getElementById('errorMessage').style.display = "block";
+            }
+        });
+    </script>
+}

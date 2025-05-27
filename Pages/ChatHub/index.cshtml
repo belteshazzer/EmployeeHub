@@ -5,12 +5,13 @@
     ViewData["Title"] = "Chat";
 }
 
+
 <div class="chat-container">
     <!-- Sidebar -->
-    <div class="chat-sidebar">
+    <div class="chat-sidebar" id="chatSidebar">
         <div class="sidebar-header">
             <h3>Chats</h3>
-            <button class="btn btn-sm btn-primary" id="newChatBtn">
+            <button class="btn btn-sm btn-primary" id="newChatBtn" onclick="showNewChatSidebar()">
                 <i class="fas fa-plus"></i> New
             </button>
         </div>
@@ -45,6 +46,24 @@
         </div>
     </div>
 
+    <!-- New Chat Sidebar -->
+    <div class="chat-sidebar" id="newChatSidebar" style="display: none;">
+        <div class="sidebar-header">
+            <h3>New Chat</h3>
+            <button class="btn btn-sm btn-secondary" onclick="showChatListSidebar()">
+                <i class="fas fa-arrow-left"></i> Back
+            </button>
+        </div>
+
+        <div class="search-box">
+            <input type="text" id="userSearchInput" placeholder="Search by name, role, or department..." class="form-control" oninput="searchUsers()">
+        </div>
+
+        <div class="user-list" id="userList">
+            <!-- User list will be dynamically populated here -->
+        </div>
+    </div>
+
     <!-- Main Chat Area -->
     <div class="chat-main">
         <div class="chat-header">
@@ -73,6 +92,73 @@
 
 @section Scripts {
     <script>
+        let allUsers = []; // Store all users fetched from the database
+
+        // Show the New Chat sidebar
+        function showNewChatSidebar() {
+            document.getElementById('chatSidebar').style.display = 'none';
+            document.getElementById('newChatSidebar').style.display = 'block';
+            fetchAllUsers(); 
+        }
+
+        // Show the Chat List sidebar
+        function showChatListSidebar() {
+            document.getElementById('newChatSidebar').style.display = 'none';
+            document.getElementById('chatSidebar').style.display = 'block';
+        }
+
+        // Fetch all users from the database
+        async function fetchAllUsers() {
+            try {
+                const response = await fetch('/api/auth/users');
+                if (response.ok) {
+                    allUsers = await response.json();
+                    displayUsers(allUsers); 
+                } else {
+                    console.error("Failed to fetch users.");
+                }
+            } catch (error) {
+                console.error("Error fetching users:", error);
+            }
+        }
+
+        // Display users in the user list
+        function displayUsers(users) {
+            const userList = document.getElementById('userList');
+            userList.innerHTML = ''; // Clear the list
+
+            users.forEach(user => {
+                const userItem = document.createElement('div');
+                userItem.className = 'user-item';
+                userItem.innerHTML = `
+                    <div>
+                        <h5>${user.FirstName}</h5>
+                        <p>${user.Department}</p>
+                    </div>
+                `;
+                userItem.onclick = () => startChat(user.id);
+                userList.appendChild(userItem);
+            });
+        }
+
+        // Search users by name, role, or department
+        function searchUsers() {
+            const searchInput = document.getElementById('userSearchInput').value.toLowerCase();
+            const filteredUsers = allUsers.filter(user =>
+                user.name.toLowerCase().includes(searchInput) ||
+                user.role.toLowerCase().includes(searchInput) ||
+                user.department.toLowerCase().includes(searchInput)
+            );
+            displayUsers(filteredUsers);
+        }
+
+        // Start a chat with the selected user
+        function startChat(userId) {
+            console.log("Starting chat with user:", userId);
+            // Logic to start a chat with the selected user
+            showChatListSidebar(); // Return to the chat list sidebar
+        }
+
         async function sendMessage() {
             const messageInput = document.getElementById('messageInput');
             const message = messageInput.value.trim();

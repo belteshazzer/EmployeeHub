@@ -22,6 +22,19 @@ namespace EmployeeHub.Controllers
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
+        [HttpGet("users")]
+        public async Task<IActionResult> GetAllUsers()
+        {
+            var users = await _authServices.GetAllUsersAsync();
+
+            return Ok(new ApiResponse<IEnumerable<User>>
+            {
+                StatusCode = 200,
+                Data = users,
+                Message = "Users retrieved successfully"
+            });
+        }
+
         [HttpPost("register")]
         public async Task<IActionResult> Register([FromBody] RegisterRequestDto request)
         {

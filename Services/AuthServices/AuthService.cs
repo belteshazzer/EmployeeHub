@@ -10,6 +10,7 @@ using EmployeeHub.Models.Entities;
 using EmployeeHub.Common.Exceptions;
 using EmployeeHub.Models.Dtos;
 using EmployeeHub.Services.AuthServices;
+using Microsoft.EntityFrameworkCore;
 
 namespace EmployeeHub.Services.AuthServices
 {
@@ -34,20 +35,30 @@ namespace EmployeeHub.Services.AuthServices
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _httpContextAccessor = httpContextAccessor ?? throw new ArgumentNullException(nameof(httpContextAccessor));
         }
+        
+        public async Task<IEnumerable<User>> GetAllUsersAsync()
+        {
+            var users = await _userManager.Users.ToListAsync();
+            if (users == null || !users.Any())
+            {
+                throw new NotFoundException("No users found.");
+            }
+            return users;
+        }
 
         public async Task<User> RegisterUserAsync(User user, string password)
         {
             // Check if email already exists
             var existingUser = await _userManager.FindByEmailAsync(user.Email);
             if (existingUser != null)
-            { 
+            {
                 throw new ConflictException("A user with this email already exists.");
             }
 
             // Ensure username is set
             if (string.IsNullOrWhiteSpace(user.UserName))
             {
-                user.UserName = user.Email; 
+                user.UserName = user.Email;
             }
 
             // Attempt to create the user
@@ -110,6 +121,12 @@ namespace EmployeeHub.Services.AuthServices
         public async Task<LoginResponse> LoginUserAsync(string email, string password)
         {
             var user = await _userManager.FindByEmailAsync(email) ?? throw new NotFoundException("User not found");
+                if (string.IsNullOrWhiteSpace(user.Email) || string.IsNullOrWhiteSpace(user.UserName))
+        {
+            throw new Exception("User data is invalid. Email or UserName is missing.");
+        }
+        _logger.LogInformation("User Email: {Email}, UserName: {UserName}", user?.Email, user?.UserName);
+
             var result = await _signInManager.CheckPasswordSignInAsync(user, password, false);
             if (result.Succeeded)
             {               

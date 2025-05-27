@@ -1,3 +1,5 @@
+using System.Text;
+using EmployeeHub.Common;
 using EmployeeHub.Common.EmailSender;
 using EmployeeHub.Data;
 using EmployeeHub.Hubs;
@@ -5,8 +7,10 @@ using EmployeeHub.Models.Entities;
 using EmployeeHub.Repository;
 using EmployeeHub.Services.AuthServices;
 using EmployeeHub.Services.ChatServices;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using RLIMS.Services.ChatService;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -16,6 +20,51 @@ builder.Services.AddRazorPages();
 
 builder.Services.AddDbContext<EmployeeHubContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+}).AddJwtBearer(options =>
+{
+
+    var jwtSettings = builder.Configuration.GetSection("Jwt");
+    var key = jwtSettings["Key"];
+    Console.WriteLine($"jwt key lenth: {Encoding.UTF8.GetBytes(key).Length * 8} bits");
+
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuer = true,
+        ValidateAudience = true,
+        ValidateLifetime = true,
+        ValidateIssuerSigningKey = true,
+        ValidIssuer = jwtSettings["Issuer"],
+        ValidAudience = jwtSettings["Audience"],
+        IssuerSigningKey = new SymmetricSecurityKey(
+            System.Text.Encoding.UTF8.GetBytes(key))
+    };
+
+    options.Events = new JwtBearerEvents
+    {
+        OnAuthenticationFailed = context =>
+        {
+            Console.WriteLine($"Authentication failed: {context.Exception.Message}");
+            return Task.CompletedTask;
+        },
+        OnTokenValidated = context =>
+        {
+            Console.WriteLine("Token validated successfully.");
+            return Task.CompletedTask;
+        },
+        OnChallenge = context =>
+        {
+            Console.WriteLine("Authentication challenge triggered.");
+            return Task.CompletedTask;
+        }
+    };
+});
+
+builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("EmailSettings"));
 
 builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
 builder.Services.AddScoped<IChatService, ChatService>();
@@ -51,6 +100,12 @@ if (!app.Environment.IsDevelopment())
     // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
 }
+
+app.MapGet("/", context =>
+{
+    context.Response.Redirect("/AuthPages/Login");
+    return Task.CompletedTask;
+});
 
 app.UseHttpsRedirection();
 app.UseStaticFiles();

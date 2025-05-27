@@ -7,11 +7,11 @@ namespace EmployeeHub.Models.Entities
         public string FirstName { get; set; } = null!;
 
         public string LastName { get; set; } = null!;
-
+        public string? Department { get; set; }
         public string? ProfilePicture { get; set; }
 
         public byte ApprovalStatus { get; set; } = 0;
-        public string RefreshToken { get; set; } = null!;
+        public string? RefreshToken { get; set; } 
         public DateTime? RefreshTokenExpiryTime { get; set; }
         public Guid? DeletedBy { get; set; }
 

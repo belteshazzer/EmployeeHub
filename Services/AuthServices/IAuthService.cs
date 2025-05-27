@@ -5,6 +5,7 @@ namespace EmployeeHub.Services.AuthServices
 {
     public interface IAuthService
     {
+        Task<IEnumerable<User>> GetAllUsersAsync();
         Task<User> RegisterUserAsync(User user, string password);
         Task<bool> VerifyEmailAsync(string email, string token);
         Task<LoginResponse> LoginUserAsync(string email, string password);
