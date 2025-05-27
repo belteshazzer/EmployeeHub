@@ -7,14 +7,13 @@ namespace EmployeeHub.Models.Entities
         public string FirstName { get; set; } = null!;
 
         public string LastName { get; set; } = null!;
-        public string? Department { get; set; }
+        public Guid DepartmentId { get; set; }
+        public Guid RoleId { get; set; }
         public string? ProfilePicture { get; set; }
-
         public byte ApprovalStatus { get; set; } = 0;
-        public string? RefreshToken { get; set; } 
+        public string? RefreshToken { get; set; }
         public DateTime? RefreshTokenExpiryTime { get; set; }
         public Guid? DeletedBy { get; set; }
-
         public DateTime CreatedDate { get; set; }
 
         public DateTime? DeletedDate { get; set; }
@@ -23,6 +22,9 @@ namespace EmployeeHub.Models.Entities
 
         public virtual ICollection<Chat> ChatsAsUser1 { get; set; } = [];
         public virtual ICollection<Chat> ChatsAsUser2 { get; set; } = [];
+        
+        public virtual Departments? Department { get; set; }
+        public virtual Roles? Role { get; set; }
 
     }
 }

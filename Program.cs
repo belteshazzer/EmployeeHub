@@ -7,6 +7,7 @@ using EmployeeHub.Models.Entities;
 using EmployeeHub.Repository;
 using EmployeeHub.Services.AuthServices;
 using EmployeeHub.Services.ChatServices;
+using EmployeeHub.Services.LookUpServices;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -70,8 +71,10 @@ builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepositor
 builder.Services.AddScoped<IChatService, ChatService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IEmailSender, EmailSender>();
+builder.Services.AddScoped<IDepartmentService, DepartmentService>();
+builder.Services.AddScoped<IRoleServices, RoleServices>();
 
-builder.Services.AddIdentity<User, IdentityRole<Guid>>(options =>
+builder.Services.AddIdentity<User, Roles>(options =>
 {
     options.User.RequireUniqueEmail = true;
     

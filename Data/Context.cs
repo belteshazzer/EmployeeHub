@@ -7,7 +7,7 @@ using EmployeeHub.Models.Dtos;
 
 namespace EmployeeHub.Data
 {
-    public class EmployeeHubContext : IdentityDbContext<User, IdentityRole<Guid>, Guid>
+    public class EmployeeHubContext : IdentityDbContext<User, Roles, Guid>
     {
         public EmployeeHubContext(DbContextOptions<EmployeeHubContext> options)
             : base(options)
@@ -36,7 +36,19 @@ namespace EmployeeHub.Data
                 .Property(c => c.MessagesJson)
                 .HasConversion(
                     v => JsonConvert.SerializeObject(v),
-                    v => JsonConvert.DeserializeObject<List<ChatHistory>>(v)); 
+                    v => JsonConvert.DeserializeObject<List<ChatHistory>>(v));
+
+            modelBuilder.Entity<User>()
+                .HasOne(u => u.Department)
+                .WithMany()
+                .HasForeignKey(u => u.DepartmentId)
+                .OnDelete(DeleteBehavior.Restrict);
+                
+            modelBuilder.Entity<User>()
+                .HasOne(u => u.Role)
+                .WithMany()
+                .HasForeignKey(u => u.RoleId)
+                .OnDelete(DeleteBehavior.Restrict);
         }
     }
 }

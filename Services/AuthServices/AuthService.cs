@@ -21,11 +21,11 @@ namespace EmployeeHub.Services.AuthServices
         private readonly IEmailSender _emailSender;
         private readonly IConfiguration _configuration;
         private readonly ILogger<AuthService> _logger;
-        private readonly RoleManager<IdentityRole<Guid>> _roleManager;
+        private readonly RoleManager<Roles> _roleManager;
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly UrlEncoder _urlEncoder = UrlEncoder.Default;
 
-        public AuthService(UserManager<User> userManager, SignInManager<User> signInManager, RoleManager<IdentityRole<Guid>> roleManager, IEmailSender emailSender, IConfiguration configuration, ILogger<AuthService> logger,IHttpContextAccessor httpContextAccessor)
+        public AuthService(UserManager<User> userManager, SignInManager<User> signInManager, RoleManager<Roles> roleManager, IEmailSender emailSender, IConfiguration configuration, ILogger<AuthService> logger,IHttpContextAccessor httpContextAccessor)
         {
             _userManager = userManager;
             _signInManager = signInManager;
@@ -38,10 +38,14 @@ namespace EmployeeHub.Services.AuthServices
         
         public async Task<IEnumerable<User>> GetAllUsersAsync()
         {
-            var users = await _userManager.Users.ToListAsync();
+            var users = await _userManager.Users
+            .Include(u => u.Department)
+            .Include(u => u.Role)
+            .ToListAsync();
+
             if (users == null || !users.Any())
             {
-                throw new NotFoundException("No users found.");
+            throw new NotFoundException("No users found.");
             }
             return users;
         }
