@@ -1,16 +1,13 @@
-using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
-using System.Security.Cryptography;
-using System.Text;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.IdentityModel.Tokens;
-using System.Text.Encodings.Web;
 using EmployeeHub.Common.EmailSender;
 using EmployeeHub.Models.Entities;
 using EmployeeHub.Common.Exceptions;
 using EmployeeHub.Models.Dtos;
-using EmployeeHub.Services.AuthServices;
 using Microsoft.EntityFrameworkCore;
+using System.IdentityModel.Tokens.Jwt;
+using Microsoft.IdentityModel.Tokens;
+using System.Security.Claims;
+using System.Text;
 
 namespace EmployeeHub.Services.AuthServices
 {
@@ -22,10 +19,8 @@ namespace EmployeeHub.Services.AuthServices
         private readonly IConfiguration _configuration;
         private readonly ILogger<AuthService> _logger;
         private readonly RoleManager<Roles> _roleManager;
-        private readonly IHttpContextAccessor _httpContextAccessor;
-        private readonly UrlEncoder _urlEncoder = UrlEncoder.Default;
 
-        public AuthService(UserManager<User> userManager, SignInManager<User> signInManager, RoleManager<Roles> roleManager, IEmailSender emailSender, IConfiguration configuration, ILogger<AuthService> logger,IHttpContextAccessor httpContextAccessor)
+        public AuthService(UserManager<User> userManager, SignInManager<User> signInManager, RoleManager<Roles> roleManager, IEmailSender emailSender, IConfiguration configuration, ILogger<AuthService> logger)
         {
             _userManager = userManager;
             _signInManager = signInManager;
@@ -33,7 +28,6 @@ namespace EmployeeHub.Services.AuthServices
             _emailSender = emailSender ?? throw new ArgumentNullException(nameof(emailSender));
             _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-            _httpContextAccessor = httpContextAccessor ?? throw new ArgumentNullException(nameof(httpContextAccessor));
         }
         
         public async Task<IEnumerable<User>> GetAllUsersAsync()
@@ -133,18 +127,12 @@ namespace EmployeeHub.Services.AuthServices
 
             var result = await _signInManager.CheckPasswordSignInAsync(user, password, false);
             if (result.Succeeded)
-            {               
-                var token = await GenerateJwtToken(user);
-                user.RefreshToken = GenerateRefreshToken();
-                user.RefreshTokenExpiryTime = DateTime.UtcNow.AddDays(7);
+            { 
+                var token = GenerateJwtTokenAsync(user);              
                 var loginResponse = new LoginResponse
                 {
-                    UserId = user.Id,
-                    Email = user.Email,
                     Token = token,
-                    TokenExpiryTime = DateTime.UtcNow.AddHours(1),
-                    RefreshToken = user.RefreshToken, 
-                    RefreshTokenExpiryTime = user.RefreshTokenExpiryTime 
+                    RefreshToken = user.RefreshToken,
                 }; 
                 return loginResponse;
             }
@@ -162,38 +150,40 @@ namespace EmployeeHub.Services.AuthServices
             }
         }
 
-        private static string GenerateRefreshToken()
+        public string GenerateJwtTokenAsync(User user)
         {
-            var randomNumber = new byte[32];
-            using var rng = RandomNumberGenerator.Create();
-            rng.GetBytes(randomNumber);
-            return Convert.ToBase64String(randomNumber);
-        }
-
-        public async Task<string> GenerateJwtToken(User user)
-        {
-            var role = await _userManager.GetRolesAsync(user) ?? throw new NotFoundException("Role not found");
-            var claims = new List<Claim>
+            if (user == null)
             {
-                new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
-                new Claim(JwtRegisteredClaimNames.Email, user.Email),
-                new Claim(ClaimTypes.Name, user.UserName)
+                throw new NotFoundException("User not found");
+            }
+            _logger.LogInformation("Generating JWT token for user: {userId}", user.Id);
+
+            var jwtConfig = _configuration.GetSection("Jwt");
+            var key = jwtConfig["Key"];
+            var tokenHandler = new JwtSecurityTokenHandler();
+            var tokenDescriptor = new SecurityTokenDescriptor
+            {
+                Subject = new ClaimsIdentity(new[]
+                {
+                    new Claim(ClaimTypes.Name, user.FirstName + " " + user.LastName),
+                    new Claim(ClaimTypes.Role, user.Role?.Name ?? "User"),
+                    new Claim("UserId", user.Id.ToString()),
+                    new Claim(ClaimTypes.Email, user.Email),
+                    new Claim("Department", user.Department?.Name ?? "Not specified"),
+                }),
+                Expires = DateTime.UtcNow.AddMinutes(Convert.ToDouble(jwtConfig["ExpirationMinutes"])),
+                SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(Encoding.UTF8.GetBytes(key)), SecurityAlgorithms.HmacSha256Signature),
+                Issuer = jwtConfig["Issuer"],
+                Audience = jwtConfig["Audience"]
             };
 
-            claims.AddRange(role.Select(r => new Claim(ClaimTypes.Role, r)));
+            var token = tokenHandler.CreateToken(tokenDescriptor);
+            var tokenString = tokenHandler.WriteToken(token);
 
-            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]));
-            var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+            _logger.LogInformation("Generated JWT token for user {Email}: {Token}", user.Email, tokenString);
 
-            var token = new JwtSecurityToken(
-                issuer: _configuration["Jwt:Issuer"],
-                audience: _configuration["Jwt:Audience"],
-                claims: claims,
-                expires: DateTime.UtcNow.AddHours(1),
-                signingCredentials: creds
-            );
+            return tokenString;
 
-            return new JwtSecurityTokenHandler().WriteToken(token);
         }
 
         public async Task LogoutUserAsync()

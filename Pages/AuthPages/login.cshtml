@@ -47,6 +47,9 @@
                     const result = await response.json();
                     console.log("Login successful:", result);
 
+                    // Store the token in local storage
+                    localStorage.setItem('jwtToken', result.data.token);
+
                     // Redirect to the chat page
                     window.location.href = "/ChatHub/index";
                 } else {

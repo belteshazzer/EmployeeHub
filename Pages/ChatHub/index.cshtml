@@ -21,28 +21,7 @@
         </div>
 
         <div class="conversation-list" id="conversationList">
-            @if (Model.ChatList != null && Model.ChatList.Any())
-            {
-                foreach (var chat in Model.ChatList)
-                {
-                    var Messages = chat.MessagesJson;
-                    var lastMessage = Messages?.LastOrDefault();
-
-                    <div class="conversation-item" data-chat-id="@chat.Id" onclick="loadChatHistory('@chat.Id')">
-                        <div class="conversation-avatar">
-                            <img src="~/images/default-avatar.png" alt="     " />
-                        </div>
-                        <div class="conversation-details">
-                            <h5>@(chat.User2Id)</h5>
-                            <p>@(lastMessage?.Message ?? "No messages available")</p>
-                        </div>
-                    </div>
-                }
-            }
-            else
-            {
-                <p class="text-muted">No conversations found.</p>
-            }
+            <!-- conversation list dynamically fetched  -->
         </div>
     </div>
 
@@ -223,5 +202,136 @@
                 console.error("Error loading chat history:", error);
             }
         }
+
+        async function fetchChatList() {
+            try {
+                const token = localStorage.getItem("jwtToken"); 
+
+                const response = await fetch('/ChatHub/index?handler=ChatList', {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`, // Include the token in the Authorization header
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (response.ok) {
+                    const result = await response.json();
+                    console.log("Fetched chat list:", result);
+
+                    displayChatList(result);
+                } else {
+                    console.error("Failed to fetch chat list.");
+                }
+            } catch (error) {
+                console.error("Error fetching chat list:", error);
+            }
+        }
+
+        // Function to display the chat list in the conversationList div
+        function displayChatList(chatList) {
+            const conversationList = document.getElementById('conversationList');
+            conversationList.innerHTML = '';
+
+            if (chatList.length > 0) {
+                chatList.forEach(chat => {
+
+                    const otherUser = chat.user1Id === @Model.CurrentUserId ? chat.user2 : chat.user1;
+                    const otherUserName = otherUser?.firstName || "Unknown";
+                    
+                    // Get last message details
+                    const lastMessage = chat.messagesJson?.length > 0 
+                        ? getLastMessageDetails(chat.messagesJson.slice(-1)[0])
+                        : {
+                            text: "No messages yet",
+                            time: "",
+                            isRead: true,
+                            isCurrentUser: false
+                        };
+
+                    // Format time if exists
+                    const messageTime = lastMessage.time 
+                        ? formatMessageTime(lastMessage.time)
+                        : "";
+
+                    // Create chat item
+                    const chatItem = document.createElement('div');
+                    chatItem.className = `conversation-item ${!lastMessage.isRead ? 'unread' : ''}`;
+                    chatItem.setAttribute('data-chat-id', chat.id);
+                    chatItem.onclick = () => loadChatHistory(chat.id);
+
+                    chatItem.innerHTML = `
+                        <div class="conversation-avatar">
+                            <img src="${otherUser?.avatarUrl || '/images/default-avatar.png'}" 
+                                alt=" " />
+                            ${!lastMessage.isRead && !lastMessage.isCurrentUser ? '<span class="unread-badge"></span>' : ''}
+                            ${!lastMessage.isRead ? '<span class="unread-badge"></span>' : ''}
+                        </div>
+                        <div class="conversation-details">
+                            <div class="conversation-header">
+                                <h5>${otherUserName}</h5>
+                                <span class="message-time">${messageTime}</span>
+                            </div>
+                            <p class="message-preview ${!lastMessage.isRead ? 'unread' : ''}">
+                                @* ${lastMessage.isCurrentUser ? 'You: ' : ''} *@
+                                ${truncateMessage(lastMessage.text, 30)}
+                            </p>
+                        </div>
+                    `;
+
+                    conversationList.appendChild(chatItem);
+                });
+            } else {
+                conversationList.innerHTML = `
+                    <div class="no-conversations">
+                        <i class="far fa-comment-dots"></i>
+                        <p>No conversations found</p>
+                    </div>
+                `;
+            }
+        }
+
+        function getLastMessageDetails(message) {
+            return {
+                text: message.message || "",
+                time: message.timestamp,
+                isRead: message.isRead,
+                isCurrentUser: !message.receiverUserId === @Model.CurrentUserId
+            };
+        }
+
+        function formatMessageTime(timestamp) {
+            const messageDate = new Date(timestamp);
+            const now = new Date();
+            
+            if (isToday(messageDate, now)) {
+                return messageDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            } else if (isYesterday(messageDate, now)) {
+                return 'Yesterday';
+            } else {
+                return messageDate.toLocaleDateString();
+            }
+        }
+
+        function isToday(date, now) {
+            return date.getDate() === now.getDate() && 
+                date.getMonth() === now.getMonth() && 
+                date.getFullYear() === now.getFullYear();
+        }
+
+        function isYesterday(date, now) {
+            const yesterday = new Date(now);
+            yesterday.setDate(yesterday.getDate() - 1);
+            return date.getDate() === yesterday.getDate() && 
+                date.getMonth() === yesterday.getMonth() && 
+                date.getFullYear() === yesterday.getFullYear();
+        }
+
+        function truncateMessage(text, maxLength) {
+            return text.length > maxLength 
+                ? text.substring(0, maxLength) + '...' 
+                : text;
+        }
+        document.addEventListener('DOMContentLoaded', fetchChatList);
     </script>
 }

@@ -22,12 +22,8 @@ namespace EmployeeHub.Models.Dtos
 
     public class LoginResponse
     {
-        public Guid UserId { get; set; } 
-        public string Email { get; set; }
-        public string Token { get; set; } 
-        public DateTime TokenExpiryTime { get; set; } 
+        public string Token { get; set; } = null!;
         public string? RefreshToken { get; set; } 
-        public DateTime? RefreshTokenExpiryTime { get; set; } 
     }
 
     public class ResendVerificationRequest

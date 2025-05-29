@@ -4,9 +4,12 @@ using EmployeeHub.Models.Dtos;
 using EmployeeHub.Common.ApiResponse;
 using EmployeeHub.Models.Entities;
 using RLIMS.Services.ChatService;
+using EmployeeHub.Utilities;
+using Microsoft.AspNetCore.Authorization;
 
 namespace EmployeeHub.Controllers
 {
+    [Authorize]
     [ApiController]
     [Route("api/[controller]")]
     public class ChatController : ControllerBase
@@ -64,11 +67,12 @@ namespace EmployeeHub.Controllers
             });
         }
 
-        [HttpGet("chat-list/{userId}")]
-        public async Task<IActionResult> GetChatList(Guid userId)
+        [HttpGet("chat-list")]
+        public async Task<IActionResult> GetChatList()
         {
+            var userId = ClaimsExtensions.GetUserId(User);
             _logger.LogInformation("Fetching chat list for user {UserId}", userId);
-
+            
             var result = await _chatService.GetChatListAsync(userId);
 
             return Ok(new ApiResponse<object>

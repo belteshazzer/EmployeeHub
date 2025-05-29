@@ -4,6 +4,7 @@ using EmployeeHub.Services.AuthServices;
 using EmployeeHub.Models.Dtos;
 using EmployeeHub.Common.ApiResponse;
 using EmployeeHub.Models.Entities;
+using Microsoft.AspNetCore.Authorization;
 
 namespace EmployeeHub.Controllers
 {
@@ -21,7 +22,7 @@ namespace EmployeeHub.Controllers
             _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
-
+        [Authorize]
         [HttpGet("users")]
         public async Task<IActionResult> GetAllUsers()
         {
@@ -57,7 +58,7 @@ namespace EmployeeHub.Controllers
             {
                 StatusCode = 200 ,
                 Data = results,
-                Message = "Registration successful" 
+                Message = "Registration successful"
             });
         }
 
