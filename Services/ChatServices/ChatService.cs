@@ -105,8 +105,9 @@ namespace EmployeeHub.Services.ChatServices
 
         public async Task<IEnumerable<Chat>> GetChatListAsync(Guid userId)
         {
-            var chats = await _repository.FindByConditionAsync(cm =>
-                (cm.User1Id == userId || cm.User2Id == userId) && !cm.IsDeleted);
+            var chats = await _repository.FindByConditionAsync(
+            cm => (cm.User1Id == userId || cm.User2Id == userId) && !cm.IsDeleted,
+            includeProperties: "User1,User2");
             return chats;
         }
 

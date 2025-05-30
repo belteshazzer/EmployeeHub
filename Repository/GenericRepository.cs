@@ -20,9 +20,19 @@ namespace EmployeeHub.Repository
             return await _dbSet.ToListAsync();
         }
 
-        public async Task<IEnumerable<TEntity>> FindByConditionAsync(Expression<Func<TEntity, bool>> expression)
+        public async Task<IEnumerable<TEntity>> FindByConditionAsync(Expression<Func<TEntity, bool>> expression, string? includeProperties = null)
         {
-            return await _dbSet.Where(expression).ToListAsync();
+            IQueryable<TEntity> query = _dbSet.Where(expression);
+
+            if (!string.IsNullOrEmpty(includeProperties))
+            {
+                foreach (var includeProperty in includeProperties.Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries))
+                {
+                    query = query.Include(includeProperty.Trim());
+                }
+            }
+
+            return await query.ToListAsync();
         }
 
         public async Task<TEntity> GetByIdAsync(object id)

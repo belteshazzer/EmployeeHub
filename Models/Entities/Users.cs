@@ -19,9 +19,6 @@ namespace EmployeeHub.Models.Entities
         public DateTime? DeletedDate { get; set; }
 
         public bool? IsDeleted { get; set; }
-
-        public virtual ICollection<Chat> ChatsAsUser1 { get; set; } = [];
-        public virtual ICollection<Chat> ChatsAsUser2 { get; set; } = [];
         
         public virtual Departments? Department { get; set; }
         public virtual Roles? Role { get; set; }

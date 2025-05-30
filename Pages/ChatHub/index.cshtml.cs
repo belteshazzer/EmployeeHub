@@ -32,7 +32,7 @@ namespace EmployeeHub.Pages.ChatHub
                 var client = _httpClientFactory.CreateClient();
 
                 // Retrieve the token from the Authorization header
-                var token = Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
+                var token = Request.Headers.Authorization.ToString().Replace("Bearer ", "");
 
                 var handler = new JwtSecurityTokenHandler();
                 var jwtToken = handler.ReadJwtToken(token);
@@ -87,6 +87,12 @@ namespace EmployeeHub.Pages.ChatHub
             try
             {
                 var client = _httpClientFactory.CreateClient();
+
+                // Retrieve the token from the Authorization header
+                var token = Request.Headers.Authorization.ToString().Replace("Bearer ", "");
+
+                // Add the token to the request headers
+                client.DefaultRequestHeaders.Add("Authorization", $"Bearer {token}");
 
                 var response = await client.GetAsync(apiUrl);
                 Console.WriteLine("API response status code: " + response.StatusCode);

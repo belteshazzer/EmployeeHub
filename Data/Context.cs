@@ -23,13 +23,13 @@ namespace EmployeeHub.Data
             // Configure entity relationships and constraints here if needed
             modelBuilder.Entity<Chat>()
                 .HasOne(c => c.User1)
-                .WithMany(u => u.ChatsAsUser1)
+                .WithMany()
                 .HasForeignKey(c => c.User1Id)
                 .OnDelete(DeleteBehavior.Restrict);
 
             modelBuilder.Entity<Chat>()
                 .HasOne(c => c.User2)
-                .WithMany(u => u.ChatsAsUser2)
+                .WithMany()
                 .HasForeignKey(c => c.User2Id)
                 .OnDelete(DeleteBehavior.Restrict);
             modelBuilder.Entity<Chat>()
