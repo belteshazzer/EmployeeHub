@@ -27,8 +27,9 @@ namespace EmployeeHub.Controllers
         public async Task<IActionResult> SendMessage([FromBody] ChatHistoryDto chatHistoryDto)
         {
             _logger.LogInformation("Sending message from userto user {ReceiverId}", chatHistoryDto.ReceiverUserId);
+            var senderUserId = ClaimsExtensions.GetUserId(User);
 
-            var result = await _chatService.SendMessageToUser(chatHistoryDto);
+            var result = await _chatService.SendMessageToUser(senderUserId, chatHistoryDto);
 
             return Ok(new ApiResponse<object>
             {

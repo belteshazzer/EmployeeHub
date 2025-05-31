@@ -1,18 +1,16 @@
 @model List<EmployeeHub.Models.Dtos.ChatHistory>
 
-@if (Model != null && Model.Any())
+@foreach (var message in Model)
 {
-    foreach (var message in Model)
-    {
-        <div class="message @(message.ReceiverUserId == Guid.Parse("491A1237-78A0-44E1-B31F-250718611219") ? "message-received" : "message-sent")">
-            <p>@message.Message</p>
-            <span class="timestamp">@message.Timestamp.ToString("g")</span>
+    var isCurrentUser = message.ReceiverUserId != ViewData["CurrentUserId"] as Guid?;
+    <div class="message @(isCurrentUser ? "message-sent" : "message-received")">
+        <div class="message-content">@message.Message</div>
+        <div class="message-info">
+            <span>@message.Timestamp.ToString("h:mm tt")</span>
+            @if (isCurrentUser)
+            {
+                <span>@(message.IsRead ? "✓✓" : "✓")</span>
+            }
         </div>
-    }
-}
-else
-{
-    <div class="empty-state">
-        <p>No messages found for this chat.</p>
     </div>
 }

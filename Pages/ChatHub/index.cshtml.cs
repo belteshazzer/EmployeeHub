@@ -6,22 +6,27 @@ using EmployeeHub.Models.Entities;
 using EmployeeHub.Common.ApiResponse;
 using System.Security.Claims;
 using System.IdentityModel.Tokens.Jwt;
+using RLIMS.Services.ChatService;
 
 namespace EmployeeHub.Pages.ChatHub
 {
     public class IndexModel : PageModel
     {
         private readonly IHttpClientFactory _httpClientFactory;
+        private readonly IChatService _chatService;
 
-        public IndexModel(IHttpClientFactory httpClientFactory)
+        public IndexModel(IHttpClientFactory httpClientFactory, IChatService chatService)
         {
             _httpClientFactory = httpClientFactory;
+            _chatService = chatService;
         }
 
         // Chat history for the main chat space
         public List<ChatHistory> ChatHistory { get; set; } = new List<ChatHistory>();
         public Guid CurrentUserId { get; set; }
         public string CurrentUserName { get; set; } = string.Empty;
+        public Guid OtherUserId { get; set; }
+        public string OtherUserName { get; set; } = string.Empty;
         public async Task<IActionResult> OnGetChatListAsync()
         {
             string apiUrl = "http://localhost:5139/api/chat/chat-list";
@@ -87,11 +92,7 @@ namespace EmployeeHub.Pages.ChatHub
             try
             {
                 var client = _httpClientFactory.CreateClient();
-
-                // Retrieve the token from the Authorization header
                 var token = Request.Headers.Authorization.ToString().Replace("Bearer ", "");
-
-                // Add the token to the request headers
                 client.DefaultRequestHeaders.Add("Authorization", $"Bearer {token}");
 
                 var response = await client.GetAsync(apiUrl);
@@ -100,29 +101,37 @@ namespace EmployeeHub.Pages.ChatHub
                 if (response.IsSuccessStatusCode)
                 {
                     var jsonResponse = await response.Content.ReadAsStringAsync();
-                    Console.WriteLine("API response content: " + jsonResponse);
-
                     var apiResponse = JsonSerializer.Deserialize<ApiResponse<List<ChatHistory>>>(jsonResponse, new JsonSerializerOptions
                     {
                         PropertyNameCaseInsensitive = true
                     });
 
                     ChatHistory = apiResponse?.Data ?? new List<ChatHistory>();
-                    Console.WriteLine("Chat history successfully retrieved. Count: " + ChatHistory.Count);
+                    
+                    // Get current user ID from token
+                    var handler = new JwtSecurityTokenHandler();
+                    var jwtToken = handler.ReadJwtToken(token);
+                    CurrentUserId = Guid.Parse(jwtToken.Claims.FirstOrDefault(c => c.Type == "UserId")?.Value);
+                    var chat = await _chatService.GetChatByIdAsync(chatId);
+                    
+                    OtherUserId = chat.User1Id == CurrentUserId ? chat.User2Id : chat.User1Id;
+                    OtherUserName = chat.User1Id == CurrentUserId ? chat.User2.FirstName + " " + chat.User2.LastName : chat.User1.FirstName + " " + chat.User1.LastName ;
+                    
+                    ViewData["CurrentUserId"] = CurrentUserId;
+                    
+                    return Partial("_ChatHistory", ChatHistory);
                 }
                 else
                 {
                     Console.WriteLine($"API Error: {response.StatusCode}");
-                    ChatHistory = new List<ChatHistory>();
+                    return Partial("_ChatHistory", new List<ChatHistory>());
                 }
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"Error fetching chat history: {ex.Message}");
-                ChatHistory = new List<ChatHistory>();
+                return Partial("_ChatHistory", new List<ChatHistory>());
             }
-
-            return Partial("_ChatHistory", ChatHistory);
         }
     }
 }

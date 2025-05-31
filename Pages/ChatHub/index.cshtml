@@ -48,6 +48,8 @@
         <div class="chat-header">
             <div id="currentChatInfo">
                 <input type="hidden" id="currentChatId" value="" />
+                <input type="hidden" id="OtherUserId" value="" />
+
                 <h4>Select a conversation</h4>
             </div>
         </div>
@@ -147,61 +149,79 @@
         async function sendMessage() {
             const messageInput = document.getElementById('messageInput');
             const message = messageInput.value.trim();
-            const currentChatId = document.getElementById('currentChatId').value; // Retrieve the chat ID
+            const receiverUserId = document.getElementById('OtherUserId').value;
+            console.log("Sending message:", message, "to user ID:", receiverUserId);    
 
-            if (!message || !currentChatId) {
-                console.error("Message or chat ID is missing.");
+            if (!message || !receiverUserId) {
+                console.error("Message or receiver ID is missing.");
                 return;
             }
 
-            const payload = {
-                ReceiverUserId: Guid.parse("491A1237-78A0-44E1-B31F-250718611219"), 
-                Message: message
-            };
-
             try {
+                const token = localStorage.getItem("jwtToken");
                 const response = await fetch('http://localhost:5139/api/chat/send-message', {
                     method: 'POST',
                     headers: {
+                        'Authorization': `Bearer ${token}`,
                         'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify(payload)
+                    body: JSON.stringify({
+                        ReceiverUserId: receiverUserId,
+                        Message: message
+                    })
                 });
 
                 if (response.ok) {
-                    const result = await response.json();
-                    console.log("Message sent successfully:", result);
+                    try {
+                        const result = await response.json(); // Parse JSON response
+                        console.log("Message sent successfully:", result);
+                        messageInput.value = '';
 
-                    // Clear the input field
-                    messageInput.value = '';
-
-                    // Reload the chat history to include the new message
-                    loadChatHistory(currentChatId);
+                        // Reload chat history for the current chat
+                        const currentChatId = document.getElementById('currentChatId').value;
+                        if (currentChatId) {
+                            loadChatHistory(currentChatId);
+                        }
+                    } catch (jsonError) {
+                        console.error("Failed to parse JSON response:", jsonError);
+                        const textResponse = await response.text();
+                        console.error("Server response:", textResponse);
+                    }
                 } else {
-                    console.error("Failed to send message.");
+                    const errorResponse = await response.text(); // Handle non-JSON error response
+                    console.error("Failed to send message:", response.status, errorResponse);
+                    alert(`Failed to send message: ${errorResponse}`);
                 }
             } catch (error) {
                 console.error("Error sending message:", error);
+                alert("Error sending message. Check console for details.");
             }
         }
 
         async function loadChatHistory(chatId) {
-            currentChatId = chatId; // Set the current chat ID
-            document.getElementById('currentChatId').value = chatId; // Store it in the hidden input field
+            currentChatId = chatId;
+            document.getElementById('currentChatId').value = chatId;
 
             try {
-                const token = localStorage.getItem("jwtToken"); 
-                const response = await fetch(`http://localhost:5139/ChatHub/index?handler=ChatHistory&chatId=${chatId}`,{
+                const token = localStorage.getItem("jwtToken");
+                const response = await fetch(`/ChatHub/index?handler=ChatHistory&chatId=${chatId}`, {
                     method: 'GET',
                     headers: {
-                        'Authorization': `Bearer ${token}`, // Include the token in the Authorization header
+                        'Authorization': `Bearer ${token}`,
                         'Content-Type': 'application/json'
                     }
                 });
+
                 if (response.ok) {
                     const chatHistoryHtml = await response.text();
                     document.getElementById('messageContainer').innerHTML = chatHistoryHtml;
                     document.getElementById('chatInput').style.display = 'block';
+                    
+                    // Scroll to bottom of chat
+                    const messageContainer = document.getElementById('messageContainer');
+                    messageContainer.scrollTop = messageContainer.scrollHeight;
+
+                    document.getElementById('OtherUserId').value = @Model.OtherUserId;
                 } else {
                     console.error("Failed to load chat history.");
                 }

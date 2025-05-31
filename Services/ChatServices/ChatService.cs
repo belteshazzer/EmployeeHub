@@ -34,13 +34,8 @@ namespace EmployeeHub.Services.ChatServices
             _hubContext = hubContext;
         }
 
-        public async Task<ChatHistory> SendMessageToUser(ChatHistoryDto chatHistoryDto)
+        public async Task<ChatHistory> SendMessageToUser(Guid senderUserId, ChatHistoryDto chatHistoryDto)
         {
-            // var senderUserId = ClaimsExtensions.GetUserId(_httpContextAccessor.HttpContext.User);
-            var senderUserId = Guid.Parse("491A1237-78A0-44E1-B31F-250718611219");
-            
-            // Validate receiver exists and is active
-            // (Add this validation based on your user repository)
 
             var chatHistory = _mapper.Map<ChatHistory>(chatHistoryDto);
             chatHistory.Timestamp = DateTime.UtcNow;
@@ -109,6 +104,13 @@ namespace EmployeeHub.Services.ChatServices
             cm => (cm.User1Id == userId || cm.User2Id == userId) && !cm.IsDeleted,
             includeProperties: "User1,User2");
             return chats;
+        }
+
+        public async Task<Chat> GetChatByIdAsync(Guid chatId)
+        {
+            var chat = (await _repository.FindByConditionAsync(cm => cm.Id == chatId,
+            includeProperties: "User1,User2")).FirstOrDefault();
+            return chat;
         }
 
         public async Task DeleteChatAsync(Guid chatId)
