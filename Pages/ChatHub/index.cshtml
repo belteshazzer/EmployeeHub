@@ -48,7 +48,7 @@
         <div class="chat-header">
             <div id="currentChatInfo">
                 <input type="hidden" id="currentChatId" value="" />
-                <input type="hidden" id="OtherUserId" value="" />
+                <input type="hidden" id="OtherUserId" value="@Model.OtherUserId" />
 
                 <h4>Select a conversation</h4>
             </div>
@@ -76,6 +76,8 @@
         console.log("Scripts are working!");
 
         let allUsers = []; // Store all users fetched from the database
+
+        var OtherUserId = '';
 
         // Show the New Chat sidebar
         window.showNewChatSidebar = function () {
@@ -149,16 +151,23 @@
         async function sendMessage() {
             const messageInput = document.getElementById('messageInput');
             const message = messageInput.value.trim();
-            const receiverUserId = document.getElementById('OtherUserId').value;
-            console.log("Sending message:", message, "to user ID:", receiverUserId);    
 
-            if (!message || !receiverUserId) {
-                console.error("Message or receiver ID is missing.");
+            console.log("Sending message:", message);
+
+            if (!message) {
+                console.error("Message is missing.");
                 return;
             }
 
             try {
                 const token = localStorage.getItem("jwtToken");
+
+                // Ensure ReceiverUserId is a valid GUID
+                if (!isValidGuid(OtherUserId)) {
+                    console.error("Invalid ReceiverUserId:", OtherUserId);
+                    alert("Invalid ReceiverUserId. Please select a valid user.");
+                    return;
+                }
                 const response = await fetch('http://localhost:5139/api/chat/send-message', {
                     method: 'POST',
                     headers: {
@@ -166,36 +175,39 @@
                         'Content-Type': 'application/json'
                     },
                     body: JSON.stringify({
-                        ReceiverUserId: receiverUserId,
-                        Message: message
+                        chatHistoryDto: {
+                            ReceiverUserId: OtherUserId,
+                            Message: message
+                        }
                     })
                 });
 
                 if (response.ok) {
-                    try {
-                        const result = await response.json(); // Parse JSON response
-                        console.log("Message sent successfully:", result);
-                        messageInput.value = '';
+                    const result = await response.json();
+                    console.log("Message sent successfully:", result);
+                    messageInput.value = '';
 
-                        // Reload chat history for the current chat
-                        const currentChatId = document.getElementById('currentChatId').value;
-                        if (currentChatId) {
-                            loadChatHistory(currentChatId);
-                        }
-                    } catch (jsonError) {
-                        console.error("Failed to parse JSON response:", jsonError);
-                        const textResponse = await response.text();
-                        console.error("Server response:", textResponse);
+                    // Reload chat history for the current chat
+                    const currentChatId = document.getElementById('currentChatId').value;
+                    if (currentChatId) {
+                        loadChatHistory(currentChatId);
                     }
                 } else {
-                    const errorResponse = await response.text(); // Handle non-JSON error response
-                    console.error("Failed to send message:", response.status, errorResponse);
-                    alert(`Failed to send message: ${errorResponse}`);
+                    const errorResponse = await response.json();
+                
+                    console.error("Failed to send message to:", OtherUserId, "Error:", errorResponse);
+                    alert(`Failed to send message: ${errorResponse.title}`);
                 }
             } catch (error) {
                 console.error("Error sending message:", error);
                 alert("Error sending message. Check console for details.");
             }
+        }
+
+        // Helper function to validate GUID format
+        function isValidGuid(guid) {
+            const guidRegex = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/;
+            return guidRegex.test(guid);
         }
 
         async function loadChatHistory(chatId) {
@@ -221,7 +233,6 @@
                     const messageContainer = document.getElementById('messageContainer');
                     messageContainer.scrollTop = messageContainer.scrollHeight;
 
-                    document.getElementById('OtherUserId').value = @Model.OtherUserId;
                 } else {
                     console.error("Failed to load chat history.");
                 }
@@ -265,6 +276,7 @@
 
                     const otherUser = chat.user1Id === @Model.CurrentUserId ? chat.user2 : chat.user1;
                     const otherUserName = otherUser?.firstName || "Unknown";
+                    OtherUserId = otherUser?.id || '';
                     
                     // Get last message details
                     const lastMessage = chat.messagesJson?.length > 0 
