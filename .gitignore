@@ -27,7 +27,6 @@ bld/
 [Ll]ogs/
 
 ## ASP.NET Razor Pages specific
-wwwroot/
 node_modules/
 dist/
 publish/
