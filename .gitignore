@@ -39,6 +39,14 @@ packages/
 *.nupkg
 *.snupkg
 
+# Ignore appsettings.Development.json
+appsettings.Development.json
+appsettings.json
+
+# Ignore Entity Framework migrations
+Migrations/
+
+
 ## Visual Studio Code
 .vscode/
 
