@@ -23,6 +23,14 @@
             <label for="password">Password</label>
             <input type="password" id="password" name="PasswordHash" class="form-control" placeholder="Enter your password" required />
         </div>
+        <div class="form-group">
+            <label for="department">Department</label>
+            <select id="department" name="DepartmentId" class="form-control" required>
+                <option value="" disabled selected>Select your department</option>
+                <!-- Options will be dynamically populated -->
+            </select>
+        </div>
+        
         <button type="submit" class="btn btn-primary">Sign Up</button>
     </form>
     <div id="errorMessage" class="text-danger mt-2" style="display: none;"></div>
@@ -35,6 +43,33 @@
 
 @section Scripts {
     <script>
+        // Fetch departments and populate the dropdown
+        async function fetchDepartments() {
+            try {
+                const response = await fetch('/api/department/all');
+                if (response.ok) {
+                    const result = await response.json();
+                    const departments = result.data;
+
+                    const departmentDropdown = document.getElementById('department');
+                    departments.forEach(department => {
+                        const option = document.createElement('option');
+                        option.value = department.id;
+                        option.textContent = department.name;
+                        departmentDropdown.appendChild(option);
+                    });
+                } else {
+                    console.error("Failed to fetch departments.");
+                }
+            } catch (error) {
+                console.error("Error fetching departments:", error);
+            }
+        }
+
+        // Call fetchDepartments on page load
+        document.addEventListener('DOMContentLoaded', fetchDepartments);
+
+        // Handle form submission
         document.getElementById('signupForm').addEventListener('submit', async function (event) {
             event.preventDefault();
 
@@ -42,13 +77,17 @@
             const lastName = document.getElementById('lastName').value.trim();
             const email = document.getElementById('email').value.trim();
             const password = document.getElementById('password').value.trim();
+            const departmentId = document.getElementById('department').value;
 
             const payload = {
                 FirstName: firstName,
                 LastName: lastName,
                 Email: email,
-                PasswordHash: password
+                PasswordHash: password,
+                DepartmentId: departmentId,
             };
+
+            console.log("Payload being sent:", payload);
 
             try {
                 const response = await fetch('/api/auth/register', {

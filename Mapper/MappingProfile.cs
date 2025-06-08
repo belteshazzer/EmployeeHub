@@ -17,6 +17,10 @@ namespace EmployeeHub.Mapper
             // Map Chat entity to ChatDto
             CreateMap<ChatHistory, ChatHistoryDto>().ReverseMap();
 
+            CreateMap<Departments, DepartmentDto>().ReverseMap();
+
+            CreateMap<Roles, RoleDto>().ReverseMap();
+
         }
     }
 }

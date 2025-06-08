@@ -6,6 +6,8 @@ using Microsoft.AspNetCore.Mvc.Controllers;
 
 namespace EmployeeHub.Controllers
 {
+    [ApiController]
+    [Route("api/[controller]")]
     public class DepartmentController : ControllerBase
     {
         private readonly IDepartmentService _departmentService;
@@ -14,7 +16,7 @@ namespace EmployeeHub.Controllers
             _departmentService = departmentService ?? throw new ArgumentNullException(nameof(departmentService));
         }
 
-        [HttpGet("departments")]
+        [HttpGet("all")]
         public async Task<IActionResult> GetAllDepartments()
         {
             var departments = await _departmentService.GetAllDepartmentsAsync();

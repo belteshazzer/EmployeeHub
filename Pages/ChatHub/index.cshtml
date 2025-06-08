@@ -21,7 +21,7 @@
         </div>
 
         <div class="conversation-list" id="conversationList">
-            <!-- conversation list dynamically fetched  -->
+            <!-- Conversation list will be dynamically populated here -->
         </div>
     </div>
 
@@ -35,7 +35,8 @@
         </div>
 
         <div class="search-box">
-            <input type="text" id="userSearchInput" placeholder="Search by name, role, or department..." class="form-control" oninput="searchUsers()">
+            <input type="text" id="userSearchInput" placeholder="Search by name, role, or department..." 
+                   class="form-control" oninput="searchUsers()">
         </div>
 
         <div class="user-list" id="userList">
@@ -49,24 +50,28 @@
             <div id="currentChatInfo">
                 <input type="hidden" id="currentChatId" value="" />
                 <input type="hidden" id="OtherUserId" value="@Model.OtherUserId" />
-
-                <h4>Select a conversation</h4>
+                <h4 id="chatPartnerName">Select a conversation</h4>
             </div>
         </div>
 
         <div class="chat-messages" id="messageContainer">
-            <!-- Chat history will be dynamically loaded here -->
+            <!-- Messages will appear here -->
+            <div class="message message-received">
+                <div class="message-content"></div>
+                <div class="message-info"></div>
+            </div>
+            
+            <div class="message message-sent">
+                <div class="message-content"></div>
+                <div class="message-info"></div>
+            </div>
         </div>
 
         <div class="chat-input" id="chatInput" style="display: none;">
-            <div class="input-group">
-                <input type="text" id="messageInput" class="form-control" placeholder="Type your message...">
-                <div class="input-group-append">
-                    <button class="btn btn-primary" id="sendButton" onclick="sendMessage()">
-                        <i class="fas fa-paper-plane"></i>
-                    </button>
-                </div>
-            </div>
+            <input type="text" id="messageInput" placeholder="Type your message...">
+            <button id="sendButton" onclick="sendMessage()">
+                <i class="fas fa-paper-plane"></i>
+            </button>
         </div>
     </div>
 </div>
@@ -175,10 +180,8 @@
                         'Content-Type': 'application/json'
                     },
                     body: JSON.stringify({
-                        chatHistoryDto: {
-                            ReceiverUserId: OtherUserId,
-                            Message: message
-                        }
+                        ReceiverUserId: OtherUserId,
+                        Message: message
                     })
                 });
 

@@ -8,7 +8,6 @@ namespace EmployeeHub.Models.Entities
 
         public string LastName { get; set; } = null!;
         public Guid DepartmentId { get; set; }
-        public Guid RoleId { get; set; }
         public string? ProfilePicture { get; set; }
         public byte ApprovalStatus { get; set; } = 0;
         public string? RefreshToken { get; set; }

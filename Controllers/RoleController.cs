@@ -5,6 +5,8 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace EmployeeHub.Controllers
 {
+    [ApiController]
+    [Route("api/[controller]")]
     public class RoleController : ControllerBase
     {
         private readonly IRoleServices _roleService;
@@ -13,7 +15,7 @@ namespace EmployeeHub.Controllers
             _roleService = roleService ?? throw new ArgumentNullException(nameof(roleService));
         }
 
-        [HttpGet("roles")]
+        [HttpGet("all")]
         public async Task<IActionResult> GetAllRoles()
         {
             var roles = await _roleService.GetAllRolesAsync();
