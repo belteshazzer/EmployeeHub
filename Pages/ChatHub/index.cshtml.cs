@@ -85,67 +85,53 @@ namespace EmployeeHub.Pages.ChatHub
         }
 
         public async Task<IActionResult> OnGetChatHistoryAsync(Guid chatId)
-{
-    string apiUrl = $"http://localhost:5139/api/chat/chat-history/{chatId}";
-    Console.WriteLine("Fetching chat history for Chat ID: " + chatId);
-
-    try
-    {
-        var client = _httpClientFactory.CreateClient();
-        var token = Request.Headers.Authorization.ToString().Replace("Bearer ", "");
-        client.DefaultRequestHeaders.Add("Authorization", $"Bearer {token}");
-
-        var response = await client.GetAsync(apiUrl);
-        Console.WriteLine("API response status code: " + response.StatusCode);
-
-        if (response.IsSuccessStatusCode)
         {
-            var jsonResponse = await response.Content.ReadAsStringAsync();
-            var apiResponse = JsonSerializer.Deserialize<ApiResponse<List<ChatHistory>>>(jsonResponse, new JsonSerializerOptions
+            string apiUrl = $"http://localhost:5139/api/chat/chat-history/{chatId}";
+            Console.WriteLine("Fetching chat history for Chat ID: " + chatId);
+
+            try
             {
-                PropertyNameCaseInsensitive = true
-            });
+                var client = _httpClientFactory.CreateClient();
+                var token = Request.Headers.Authorization.ToString().Replace("Bearer ", "");
+                client.DefaultRequestHeaders.Add("Authorization", $"Bearer {token}");
 
-            ChatHistory = apiResponse?.Data ?? new List<ChatHistory>();
+                var response = await client.GetAsync(apiUrl);
+                Console.WriteLine("API response status code: " + response.StatusCode);
 
-            // Get current user ID from token
-            var handler = new JwtSecurityTokenHandler();
-            var jwtToken = handler.ReadJwtToken(token);
-            CurrentUserId = Guid.Parse(jwtToken.Claims.FirstOrDefault(c => c.Type == "UserId")?.Value);
+                if (response.IsSuccessStatusCode)
+                {
+                    var jsonResponse = await response.Content.ReadAsStringAsync();
+                    var apiResponse = JsonSerializer.Deserialize<ApiResponse<List<ChatHistory>>>(jsonResponse, new JsonSerializerOptions
+                    {
+                        PropertyNameCaseInsensitive = true
+                    });
 
-            // Fetch chat details
-            var chat = await _chatService.GetChatByIdAsync(chatId);
-            Console.WriteLine($"Chat object: {chat}");
-            Console.WriteLine($"Chat.User1Id: {chat?.User1Id}, Chat.User2Id: {chat?.User2Id}");
+                    ChatHistory = apiResponse?.Data ?? new List<ChatHistory>();
 
-            if (chat == null)
+                    // Get current user ID from token
+                    var handler = new JwtSecurityTokenHandler();
+                    var jwtToken = handler.ReadJwtToken(token);
+                    CurrentUserId = Guid.Parse(jwtToken.Claims.FirstOrDefault(c => c.Type == "UserId")?.Value);
+
+                    // CORRECTED: Add a flag to each message indicating whether it is sent or received
+                    ChatHistory.ForEach(message =>
+                    {
+                        message.IsSent = message.ReceiverUserId != CurrentUserId;
+                    });
+
+                    return Partial("_ChatHistory", ChatHistory);
+                }
+                else
+                {
+                    Console.WriteLine($"API Error: {response.StatusCode}");
+                    return Partial("_ChatHistory", new List<ChatHistory>());
+                }
+            }
+            catch (Exception ex)
             {
-                Console.WriteLine($"Chat with ID {chatId} not found.");
+                Console.WriteLine($"Error fetching chat history: {ex.Message}");
                 return Partial("_ChatHistory", new List<ChatHistory>());
             }
-
-            OtherUserId = chat.User1Id == CurrentUserId ? chat.User2Id : chat.User1Id;
-            OtherUserName = chat.User1Id == CurrentUserId
-                ? chat.User2?.FirstName + " " + chat.User2?.LastName
-                : chat.User1?.FirstName + " " + chat.User1?.LastName;
-
-            Console.WriteLine($"OtherUserId: {OtherUserId}, OtherUserName: {OtherUserName}");
-
-            ViewData["CurrentUserId"] = CurrentUserId;
-
-            return Partial("_ChatHistory", ChatHistory);
         }
-        else
-        {
-            Console.WriteLine($"API Error: {response.StatusCode}");
-            return Partial("_ChatHistory", new List<ChatHistory>());
-        }
-    }
-    catch (Exception ex)
-    {
-        Console.WriteLine($"Error fetching chat history: {ex.Message}");
-        return Partial("_ChatHistory", new List<ChatHistory>());
-    }
-}
     }
 }

@@ -1,15 +1,17 @@
-@model List<EmployeeHub.Models.Dtos.ChatHistory>
+@using EmployeeHub.Models.Dtos
+@model List<ChatHistory>
 
 @foreach (var message in Model)
 {
-    var isCurrentUser = message.ReceiverUserId != ViewData["CurrentUserId"] as Guid?;
-    <div class="message @(isCurrentUser ? "message-sent" : "message-received")">
+    <div class="message @((message.IsSent ?? false) ? "message-sent" : "message-received")">
         <div class="message-content">@message.Message</div>
         <div class="message-info">
-            <span>@message.Timestamp.ToString("h:mm tt")</span>
-            @if (isCurrentUser)
+            @message.Timestamp.ToString("hh:mm tt")
+            @if (message.IsSent ?? false)
             {
-                <span>@(message.IsRead ? "✓✓" : "✓")</span>
+                <span class="message-status">
+                    @(message.IsRead ? "✓✓" : "✓")
+                </span>
             }
         </div>
     </div>

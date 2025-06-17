@@ -64,6 +64,10 @@ namespace EmployeeHub.Services.AuthServices
 
             if (result.Succeeded)
             {
+                // Assign default "Officer" role
+                var officerRole = await _roleManager.FindByNameAsync("Officer") ?? throw new NotFoundException("Role 'Officer' not found");
+                await _userManager.AddToRoleAsync(user, officerRole.Name);
+
                 var token = await _userManager.GenerateEmailConfirmationTokenAsync(user);
                 _logger.LogInformation("token: {token}", token);
                 await SendConfirmationEmail(user.Email, token);

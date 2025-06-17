@@ -56,7 +56,7 @@
 
         <div class="chat-messages" id="messageContainer">
             <!-- Messages will appear here -->
-            <div class="message message-received">
+            <div class="message message-received"></div>
                 <div class="message-content"></div>
                 <div class="message-info"></div>
             </div>
@@ -100,7 +100,15 @@
         // Fetch all users from the database
         async function fetchAllUsers() {
             try {
-                const response = await fetch('http://localhost:5139/api/auth/users');
+                const token = localStorage.getItem("jwtToken");
+
+                const response = await fetch('http://localhost:5139/api/auth/users', {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
                 if (response.ok) {
                     const result = await response.json();
                     allUsers = result.data; 
@@ -127,12 +135,13 @@
                         <h5>${user.firstName + "  "+user.lastName}</h5>
                         <div class="p-body">
                             <p>${user.department.name || 'No department specified'}</p>
-                            <p>${user.role.name || 'No role specified'}</p>
+                            @* <p>${user.role.name ?? 'No role specified'}</p> *@
                         </div>
                     </div>
                 `;
-                userItem.onclick = () => startChat(user.id);
                 userList.appendChild(userItem);
+                userItem.onclick = () => startChat(user.id);
+
             });
         }
 
@@ -150,7 +159,7 @@
         function startChat(userId) {
             console.log("Starting chat with user:", userId);
             // Logic to start a chat with the selected user
-            showChatListSidebar(); // Return to the chat list sidebar
+            showChatListSidebar(); 
         }
 
         async function sendMessage() {

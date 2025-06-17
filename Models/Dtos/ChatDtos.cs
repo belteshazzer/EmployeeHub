@@ -26,6 +26,7 @@ namespace EmployeeHub.Models.Dtos
         public DateTime? EditedTimestamp { get; set; }
         public DateTime? DeletedTimestamp { get; set; }
         public string? History { get; set; }
+        public bool? IsSent { get; set; }
     }
     
 }
